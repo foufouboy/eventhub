@@ -1,0 +1,77 @@
+
+services:
+
+  frontend:
+    build: 
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - 5173:5173
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    environment:
+      DATABASE_URL: postgresql://eventhub:eventhub_password@postgres:5432/eventhub
+      MONGODB_URL: mongodb://mongodb:27017/eventhub
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+    command: npm run dev
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: eventhub
+      POSTGRES_USER: eventhub
+      POSTGRES_PASSWORD: eventhub_password
+    ports:
+      - "5433:5433"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:latest
+    environment: 
+      MONGO_INITDB_DATABASE: eventhub
+    ports: 
+      - "27017:27017"
+    volumes: 
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "81:81"
+    volumes: 
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+    depends_on:
+      - frontend
+      - backend
+
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
