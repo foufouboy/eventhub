@@ -1,0 +1,66 @@
+services:
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      REDIS_URL: ${REDIS_URL}
+
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+
+  postgres:
+    image: postgres:16
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mongodb:
+    image: mongo:8
+
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+
+    volumes:
+      - mongodb_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: nginx:alpine
+
+    ports:
+      - "81:80"
+
+    volumes:
+      - ./docker/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
+
+    depends_on:
+      - frontend
+      - backend
+
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+
