@@ -1,70 +1,57 @@
-
 services:
 
   frontend:
-    build: 
+    build:
       context: ./client
-      dockerfile: Dockerfile
-    ports:
-      - 5173:5173
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-    command: npm run dev -- --host 0.0.0.0
-
   backend:
     build:
       context: ./server
       dockerfile: Dockerfile
-    ports:
-      - 3000:3000
-    volumes:
-      - ./server:/app
-      - /app/node_modules
+
     environment:
       DATABASE_URL: ${DATABASE_URL}
       MONGODB_URL: ${MONGODB_URL}
       REDIS_URL: ${REDIS_URL}
+
     depends_on:
       - postgres
       - mongodb
       - redis
-    command: npm run dev
 
   postgres:
-    image: postgres:latest
+    image: postgres:16
+
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "5433:5433"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
   mongodb:
-    image: mongo:latest
-    environment: 
+    image: mongo:8
+
+    environment:
       MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
-    ports: 
-      - "27017:27017"
-    volumes: 
+
+    volumes:
       - mongodb_data:/data/db
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
 
     volumes:
       - redis_data:/data
 
   nginx:
     image: nginx:alpine
+
     ports:
-      - "81:81"
-    volumes: 
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - "80:80"
+
+    volumes:
+      - ./docker/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
 
     depends_on:
       - frontend
@@ -75,3 +62,4 @@ volumes:
   postgres_data:
   mongodb_data:
   redis_data:
+
