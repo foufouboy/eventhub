@@ -4,13 +4,12 @@ services:
   frontend:
     build: 
       context: ./client
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     ports:
       - 5173:5173
     volumes:
       - ./client:/app
       - /app/node_modules
-    command: npm run dev -- --host 0.0.0.0
 
   backend:
     build:
@@ -23,7 +22,7 @@ services:
       - /app/node_modules
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      MONGODB_URL: ${MONGODB_URL}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
       REDIS_URL: ${REDIS_URL}
     depends_on:
       - postgres
@@ -38,7 +37,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5433:5433"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -62,7 +61,7 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "81:81"
+      - "81:80"
     volumes: 
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
 
